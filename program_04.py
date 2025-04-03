@@ -15,14 +15,21 @@
 !pip install --upgrade scipy
 
 
-import gensim.downloader as api
+from gensim.scripts.glove2word2vec import glove2word2vec
+from gensim.models import KeyedVectors
 
-# Download and load pre-trained word2vec model
-model = api.load('word2vec-google-news-300')
+# Paths to the GloVe file and output Word2Vec file
+glove_input_file = "glove.6B.100d.txt"  # Path to GloVe file
+word2vec_output_file = "glove.6B.100d.word2vec.txt"  # Output file in Word2Vec format
 
-# Test the model
+# Convert GloVe format to Word2Vec format
+glove2word2vec(glove_input_file, word2vec_output_file)
+
+# Load the converted Word2Vec model
+model = KeyedVectors.load_word2vec_format(word2vec_output_file, binary=False)
+
+# Test the loaded model
 print(model.most_similar("king"))
-
 
 
 # Define the original medical prompt
