@@ -1,88 +1,50 @@
-!pip install gensim scikit-learn matplotlib numpy
-
-
-!wget http://nlp.stanford.edu/data/glove.6B.zip
-!unzip glove.6B.zip
-
-# Convert GloVe format to Word2Vec format
-from gensim.scripts.glove2word2vec import glove2word2vec
-glove_input_file = "glove.6B.100d.txt"
-word2vec_output_file = "glove.6B.100d.word2vec.txt"
-glove2word2vec(glove_input_file, word2vec_output_file)
-
-
-
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
-from sklearn.manifold import TSNE
+from gensim.models import KeyedVectors
 
-# Select words from a specific domain (sports in this example)
-words = ['football', 'soccer', 'basketball', 'tennis', 'baseball', 
-         'coach', 'goal', 'player', 'referee', 'team',
-         'engineer', 'information']  # Added some non-sports words for contrast
+# Load the pre-trained GloVe embeddings (100D model)
+model_100d = KeyedVectors.load_word2vec_format("/content/glove.6B.100d.word2vec.txt", binary=False, limit=500000)
 
-# Get word vectors
-word_vectors = np.array([model[word] for word in words if word in model])
+# Select words from a specific domain (sports) and others
+words = ['football', 'soccer', 'basketball', 'tennis', 'engineer', 
+         'information', 'baseball', 'coach', 'goal', 'player', 
+         'referee', 'team']
 
-# Filter words that exist in the model
-valid_words = [word for word in words if word in model]
+# Extract vectors for selected words
+word_vectors = np.array([model_100d[word] for word in words])
 
-# Dimensionality reduction using PCA
+# Perform PCA to reduce dimensionality to 2D
 pca = PCA(n_components=2)
 pca_result = pca.fit_transform(word_vectors)
 
-# Plotting
-plt.figure(figsize=(12, 10))
-plt.scatter(pca_result[:, 0], pca_result[:, 1])
-
-# Add labels
-for i, word in enumerate(valid_words):
-    plt.annotate(word, xy=(pca_result[i, 0], pca_result[i, 1]), 
-                 xytext=(5, 2), textcoords='offset points',
-                 ha='right', va='bottom')
-
+# Plotting the words in 2D
+plt.figure(figsize=(10, 8))
+for i, word in enumerate(words):
+    plt.scatter(pca_result[i, 0], pca_result[i, 1])
+    plt.text(pca_result[i, 0] + 0.02, pca_result[i, 1], word, fontsize=12)
 plt.title("PCA Visualization of Word Embeddings")
 plt.xlabel("PCA Dimension 1")
 plt.ylabel("PCA Dimension 2")
 plt.show()
 
 
-
-
-# t-SNE often gives better separation of clusters
-tsne = TSNE(n_components=2, random_state=42, perplexity=3)
-tsne_result = tsne.fit_transform(word_vectors)
-
-# Plotting
-plt.figure(figsize=(12, 10))
-plt.scatter(tsne_result[:, 0], tsne_result[:, 1])
-
-# Add labels
-for i, word in enumerate(valid_words):
-    plt.annotate(word, xy=(tsne_result[i, 0], tsne_result[i, 1]), 
-                 xytext=(5, 2), textcoords='offset points',
-                 ha='right', va='bottom')
-
-plt.title("t-SNE Visualization of Word Embeddings")
-plt.xlabel("t-SNE Dimension 1")
-plt.ylabel("t-SNE Dimension 2")
-plt.show()
-
-
-
+# Function to find similar words
 def get_similar_words(word, model, topn=5):
-    try:
-        similar_words = model.most_similar(word, topn=topn)
-        print(f"Words similar to '{word}':")
-        for word, similarity in similar_words:
-            print(f"{word}: {similarity:.4f}")
-        return similar_words
-    except KeyError:
-        print(f"Word '{word}' not in vocabulary")
-        return []
+    similar_words = model.similar_by_word(word, topn=topn)
+    return similar_words
 
-# Example usage
-similar_words_football = get_similar_words('football', model)
+# Example: Find words similar to 'football'
+similar_words_football = get_similar_words('football', model_100d, topn=5)
+print(f"Words similar to 'football': {similar_words_football}")
 
 
+# List of words to print embeddings for
+words_to_print = ['football', 'soccer']
+
+# Print their embeddings
+for word in words_to_print:
+    if word in model_100d:
+        print(f"Vector embedding for '{word}':\n{model_100d[word]}\n")
+    else:
+        print(f"Word '{word}' not found in the model.")
