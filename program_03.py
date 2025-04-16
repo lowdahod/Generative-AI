@@ -22,6 +22,7 @@ legal_corpus = [
 
 # Preprocess the corpus (tokenization)
 tokenized_corpus = [simple_preprocess(sentence) for sentence in legal_corpus]
+print(tokenized_corpus)
 
 # Train the Word2Vec model
 legal_word2vec = Word2Vec(
@@ -35,6 +36,18 @@ legal_word2vec = Word2Vec(
 
 # Save the model (optional)
 legal_word2vec.save("legal_word2vec.model")
+
+
+
+word = "court"
+if word in legal_word2vec.wv:
+    print(f"Vector embedding for '{word}':\n{legal_word2vec.wv[word]}\n")
+else:
+    print(f"Word '{word}' not found in the model.")
+
+
+similar_words = legal_word2vec.wv.most_similar("court", topn=5)
+print(f"Words similar to 'court': {similar_words}")
 
 
 
@@ -64,20 +77,25 @@ plt.show()
 
 
 
-# Function to find similar words
-def get_similar_words(word, model, topn=5):
-    try:
-        similar_words = model.wv.most_similar(word, topn=topn)
-        print(f"Words similar to '{word}':")
-        for word, similarity in similar_words:
-            print(f"{word}: {similarity:.4f}")
-        return similar_words
-    except KeyError:
-        print(f"Word '{word}' not in vocabulary")
-        return []
+enhanced_corpus = [
+    "The court ruled in favor of the plaintiff.",
+    "The patient underwent surgery for a critical condition.",
+    "Legal documents must be carefully drafted to avoid disputes.",
+    "The doctor prescribed medication for chronic illness.",
+]
 
-# Example usage
-similar_words = get_similar_words("lawyer", legal_word2vec)
+# Preprocess and train
+tokenized_corpus = [simple_preprocess(sentence) for sentence in enhanced_corpus]
+domain_word2vec = Word2Vec(
+    sentences=tokenized_corpus,
+    vector_size=100,  # Higher dimensionality for richer representation
+    window=5,
+    sg=1,
+    epochs=150
+)
+
+domain_word2vec.save("domain_word2vec.model")
+
 
 
 
