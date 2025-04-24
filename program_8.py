@@ -42,3 +42,12 @@ with open(file_path, "r", encoding="utf-8") as file:
     document_text = file.read() 
  
 print(document_text) 
+
+
+
+from langchain_core.prompts import ChatPromptTemplate 
+prompt = ChatPromptTemplate.from_template("Extract and list the types of AI agents as bullet points from the following text:{document_text}") 
+chain = prompt | model
+
+
+print(chain.invoke({"document_text": document_text}).content) 
