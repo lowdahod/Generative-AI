@@ -1,12 +1,13 @@
 # Install required packages first (run these in terminal)
-# pip install langchain-cohere
-# pip install pydantic
+!pip install langchain-cohere
+!pip install pydantic
 
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
 from pydantic import BaseModel
 import os
 from getpass import getpass
+from langchain_cohere import ChatCohere
 
 # 1. Define what information we want
 class InstitutionDetails(BaseModel):
@@ -31,14 +32,18 @@ if not os.environ.get("COHERE_API_KEY"):
     os.environ["COHERE_API_KEY"] = getpass("Enter Cohere API key: ")
 
 # 4. Connect to Cohere AI
-from langchain_cohere import ChatCohere
+
 model = ChatCohere(model="command-r")
 
 # 5. Create the question-answer system
 prompt = PromptTemplate(input_variables=["institution_name"], template=prompt_template)
 chain = LLMChain(llm=model, prompt=prompt)
 
+def fetch_inst_details(institution_name: str):
+    result = chain.run(institution_name=institution_name)
+    return result
+
 # 6. Ask about an institution
 institution_name = input("Enter institution name: ")
-result = chain.invoke({"institution_name": institution_name})
-print(result['text'])
+answer = fetch_inst_details(institution_name)
+print(answer)
